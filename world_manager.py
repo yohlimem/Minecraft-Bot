@@ -371,6 +371,46 @@ class MinecraftWorldManager:
 
         # Run in separate thread
         return await asyncio.to_thread(_blocking_scan)
+        
+    async def drop_to_ground(self, x, y, z):
+        """
+        Simulates gravity: Lowers the Y coordinate until a solid block is found.
+        Returns: The coordinate (x, new_y, z) directly ON TOP of the ground.
+        """
+        print(f"--- Dropping from {x}, {y}, {z} ---")
+
+        def _blocking_drop():
+            try:
+                level = amulet.load_level(self.world_path)
+                
+                # Start at current Y and look down
+                # World bottom is -64 in 1.21
+                for current_y in range(int(y), -65, -1):
+                    try:
+                        # Check the block we are currently inside
+                        block = level.get_block(x, current_y, z, "minecraft:overworld")
+                        name = block.namespaced_name
+                        
+                        # List of things we fall through
+                        non_solid = ["air", "water", "lava", "void"]
+                        
+                        # If the block is NOT air (it is solid), we hit the ground.
+                        # The "safe spot" is the block immediately above this one.
+                        if not any(ns in name for ns in non_solid):
+                            level.close()
+                            return (x, current_y + 1, z)
+                            
+                    except:
+                        pass # Treat unload/errors as air/void and keep falling
+
+                level.close()
+                return (x, -64, z) # Hit bottom of the world (Void)
+            
+            except Exception as e:
+                print(f"Error: {e}")
+                return (x, y, z) # Return original if error
+
+        return await asyncio.to_thread(_blocking_drop)
 # --- EXECUTION ---
 if __name__ == "__main__":
     manager = MinecraftWorldManager()
