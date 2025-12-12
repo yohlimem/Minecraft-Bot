@@ -50,3 +50,9 @@ class Policy(nn.Module):
             target_returns = torch.flip(torch.cumsum(torch.flip(rewards, dims=(0,)), dim=0), dims=(0,))
             adv = target_returns - self.value_function(states).squeeze()
             return (adv - adv.mean()) / (adv.std() + 1e-8) # Standardization
+        
+    def optimizer_step(self, states: torch.Tensor, actions_taken_indices: torch.Tensor, old_probs: torch.Tensor, rewards: torch.Tensor, advantages: torch.Tensor):
+        objective = self.objective(states, actions_taken_indices, old_probs, rewards, advantages)
+        self.optimizer.zero_grad()
+        objective.backward()
+        self.optimizer.step()
