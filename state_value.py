@@ -1,10 +1,11 @@
+from collections import OrderedDict
 import numpy as np
 import torch
 from torch import nn
 from torch import optim
 
 class StateValue(nn.Module):
-    def __init__(self, state_size, hidden_amount=3, layer_size=256):
+    def __init__(self, state_size:int, hidden_amount:int =3, layer_size:int =256):
         super().__init__()
 
         '''
@@ -28,10 +29,10 @@ class StateValue(nn.Module):
         )
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001)
     
-    def forward(self, state):
+    def forward(self, state: torch.Tensor):
         return self.model(state)
     
-    def loss(self, states, rewards):
+    def loss(self, states: torch.Tensor, rewards: torch.Tensor):
         '''Calculates the loss of the value function'''
         target_returns = torch.flip(torch.cumsum(torch.flip(rewards, dims=(0,)), dim=0), dims=(0,)).detach()
 
@@ -39,7 +40,7 @@ class StateValue(nn.Module):
 
         return loss_val
 
-    def optimizer_step(self, states, rewards):
+    def optimizer_step(self, states: torch.Tensor, rewards: torch.Tensor):
         loss = self.loss(states, rewards)
         self.optimizer.zero_grad()
         loss.backward()
