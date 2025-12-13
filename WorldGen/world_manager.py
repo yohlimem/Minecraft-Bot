@@ -1,13 +1,14 @@
 import os
 import subprocess
 import time
-from uu import Error
 import requests
 import shutil
+import math
 from mcrcon import MCRcon
 import amulet
-import asyncio
 from amulet.api.block import Block
+import numpy as np
+import asyncio
 
 class MinecraftWorldManager:
     def __init__(self, server_dir="minecraft_server"):
@@ -210,9 +211,9 @@ class MinecraftWorldManager:
             for gx in range(min_x, max_x + 1):
                 for gy in range(min_y, max_y + 1):
                     for gz in range(min_z, max_z + 1):
+                        lx, ly, lz = gx - min_x, gy - min_y, gz - min_z
                         try:
                             # Map global coord to local index
-                            lx, ly, lz = gx - min_x, gy - min_y, gz - min_z
                             
                             if 0 <= lx < size and 0 <= ly < size and 0 <= lz < size:
                                 block = level.get_block(gx, gy, gz, "minecraft:overworld")
@@ -236,8 +237,8 @@ class MinecraftWorldManager:
             # We define a set for O(1) lookups
             transparent_blocks = {
                 "minecraft:air", "minecraft:water", "minecraft:lava", 
-                "minecraft:glass", "minecraft:grass", "minecraft:poppy",
-                "minecraft:dandelion", "minecraft:torch"
+                "minecraft:glass", "minecraft:grass",
+                "minecraft:torch"
             }
             
             # Local center index (e.g., 2,2,2 for a size 5 box)
@@ -313,7 +314,7 @@ class MinecraftWorldManager:
                 
                 # 3. Set it to Air (The "Break")
                 air_block = amulet.api.block.Block("minecraft", "air")
-                level.set_block(x, y, z, air_block, "minecraft:overworld")
+                level.set_version_block(x, y, z, "minecraft:overworld", ("java", (1,21,11)), air_block)
                 
                 # 4. Save Changes to Disk
                 level.save()
