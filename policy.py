@@ -2,9 +2,10 @@ from collections import OrderedDict
 from torch import nn
 from torch import optim
 import torch
+import StateValue
 
 class Policy(nn.Module):
-    def __init__(self, value_function: nn.Sequential, state_size: int, actions_size: int, hidden_amount: int =3, layer_size: int =256):
+    def __init__(self, value_function: StateValue.StateValue, state_size: int, actions_size: int, hidden_amount: int =3, layer_size: int =256):
         super().__init__()
 
         '''
@@ -56,3 +57,5 @@ class Policy(nn.Module):
         self.optimizer.zero_grad()
         objective.backward()
         self.optimizer.step()
+        
+        self.value_function.optimizer_step(states, rewards)
